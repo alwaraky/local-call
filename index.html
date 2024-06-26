@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تطبيق الدردشة المحلية</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .chat-container {
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .message {
+      padding: 5px;
+      margin: 5px 0;
+      border-radius: 3px;
+    }
+
+    .message.sent {
+      background-color: #e1ffc7;
+      align-self: flex-end;
+    }
+
+    .message.received {
+      background-color: #f1f1f1;
+      align-self: flex-start;
+    }
+
+    input[type="text"] {
+      border: none;
+      padding: 10px;
+      flex: 1;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .input-container {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div id="messages" class="messages"></div>
+    <div class="input-container">
+      <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." autofocus>
+      <button id="sendButton">إرسال</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const ws = new WebSocket("ws://192.168.1.5:8080");
+      const messagesDiv = document.getElementById("messages");
+      const messageInput = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+
+      ws.onmessage = (event) => {
+        // نقرأ البيانات المستلمة كنص
+        event.data.text().then(text => {
+          const message = document.createElement("div");
+          message.classList.add("message", "received");
+          message.textContent = text;
+          messagesDiv.appendChild(message);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+      };
+
+      const sendMessage = () => {
+        const messageText = messageInput.value;
+        if (messageText !== "") {
+          // نرسل البيانات كنص
+          ws.send(messageText);
+          const message = document.createElement("div");
+          message.classList.add("message", "sent");
+          message.textContent = messageText;
+          messagesDiv.appendChild(message);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          messageInput.value = "";
+        }
+      };
+
+      sendButton.addEventListener("click", sendMessage);
+      messageInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
